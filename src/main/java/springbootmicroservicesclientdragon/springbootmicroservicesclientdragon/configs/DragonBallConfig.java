@@ -6,7 +6,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@RefreshScope // habilita el endpoint [POST] /actuator/refresh // para refrescarla cahe
+@RefreshScope // habilita el endpoint [POST] /actuator/refresh // para refrescarla cache de las configuraciones
 @ConfigurationProperties
 public class DragonBallConfig {
     // El application.name lo importara de la configuracion del servidor de configuracion
