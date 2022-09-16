@@ -3,21 +3,29 @@ package springbootmicroservicesclientdragon.springbootmicroservicesclientdragon.
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import springbootmicroservicesclientdragon.springbootmicroservicesclientdragon.configs.DragonBallConfig;
+import springbootmicroservicesclientdragon.springbootmicroservicesclientdragon.services.MockTranslationSlowServiceTest;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/application-name")
 public class ApplicationNameController {
+
+
+    @Autowired
+    private MockTranslationSlowServiceTest mockTranslationSlowServiceTest;
 
     // Se inyecta para poder crear nuestra propia mestrica
     @Autowired
@@ -63,7 +71,6 @@ public class ApplicationNameController {
         logger.info("Ejecutando getAppNameTimed a las :\t" + LocalDateTime.now());
 
 
-
         Integer valueInteger = new Random().nextInt(100);
         if (valueInteger < 50) {
             try {
@@ -76,5 +83,27 @@ public class ApplicationNameController {
         }
 
         return ResponseEntity.ok(this.dragonBallConfig.getApplicationName());
+    }
+
+
+    @GetMapping("/translation-slow/{word}")
+    @Cacheable("translationsMock") // Especifica que se cachera, debe estar registrao en el CacheManager
+    public ResponseEntity<String> getNameTranslationSlow(@PathVariable String word) {
+        logger.info("Ejecutando getNameSlow a las :\t" + LocalDateTime.now());
+
+        Optional<String> wordTranslated = this.mockTranslationSlowServiceTest.getTranslation(word);
+
+        if (wordTranslated.isPresent()) {
+            return ResponseEntity.ok(wordTranslated.get());
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("/clean-cache")
+    public ResponseEntity<Void> clearCache(){
+        logger.info("Ejecutando clearCache a las :\t" + LocalDateTime.now());
+        this.mockTranslationSlowServiceTest.clearCache();
+        return new ResponseEntity<Void>(HttpStatus.OK);
     }
 }
